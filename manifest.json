@@ -1,7 +1,8 @@
 {
   "name": "GRE 词汇训练器",
   "short_name": "GRE词汇",
-  "start_url": "index.html",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#0f1220",
   "theme_color": "#4A7BFF",

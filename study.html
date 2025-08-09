@@ -1,10 +1,247 @@
-<!doctype html><html><head>
-<base href="./">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#4A7BFF">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="apple-touch-icon.png"><meta charset='utf-8'><title>Study</title></head><body>占位：学习页<script>
+<!doctype html><html lang="zh-CN">
+<head>
+  <base href="./">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GRE 词汇训练器</title>
+
+  <!-- PWA / iOS -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#4A7BFF">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+
+  <style>
+  :root{
+    --bg:  hsl(220 30% 98%);
+    --ink: hsl(215 32% 18%);
+    --muted: hsl(215 12% 48%);
+    --glass: rgba(255,255,255,.55);
+    --glass-b: rgba(255,255,255,.8);
+    --border: rgba(30,40,60,.10);
+    --accent: hsl(222 80% 66%);
+    --accent-weak: hsl(222 85% 75%);
+    --success: hsl(156 62% 45%);
+    --warn: hsl(29 88% 55%);
+    --danger: hsl(350 82% 54%);
+  }
+  [data-theme="dark"]{
+    --bg:  radial-gradient(1100px 700px at 10% 18%, rgba(40,60,100,.25), transparent 60%),
+           radial-gradient(900px 700px at 85% 12%, rgba(120,60,140,.18), transparent 60%),
+           linear-gradient(135deg, hsl(222 26% 12%), hsl(222 22% 16%));
+    --ink: hsl(0 0% 96%);
+    --muted: hsl(0 0% 78%);
+    --glass: rgba(255,255,255,.08);
+    --glass-b: rgba(255,255,255,.14);
+    --border: rgba(255,255,255,.16);
+    --accent: hsl(222 80% 66%);
+    --accent-weak: hsl(222 85% 75%);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family: ui-sans-serif, -apple-system, "SF Pro Text","SF Pro Display", Segoe UI, Roboto, Inter, system-ui;
+    color: var(--ink);
+    background: var(--bg);
+    background-attachment: fixed;
+  }
+  a{color:inherit;text-decoration:none}
+  main{max-width:1100px;margin:56px auto 80px;padding:0 18px}
+  h1{font-size: clamp(26px, 3.5vw, 40px); margin: 14px 0}
+  h2{font-size: clamp(20px, 2.6vw, 28px); margin: 14px 0; color:var(--muted)}
+  .card, .flash, .stat, .panel{
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    backdrop-filter: blur(12px) saturate(130%);
+    -webkit-backdrop-filter: blur(12px) saturate(130%);
+    box-shadow: 0 20px 60px rgba(0,0,0,.12);
+    padding: 22px;
+  }
+  .nav{position: sticky; top:0; z-index:20; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);}
+  .nav-wrap{display:flex; align-items:center; gap:16px; max-width:1100px; margin: 8px auto; padding: 10px 18px; border-radius: 16px;}
+  .brand{font-weight:800; letter-spacing:.3px}
+  .tabs{position:relative; display:flex; gap:10px; padding:6px; border:1px solid var(--border); border-radius:999px; background: var(--glass); align-items:center}
+  .indicator{position:absolute; top:6px; left:6px; height:calc(100% - 12px); width:80px; border-radius:999px; background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.6)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.65), 0 6px 18px rgba(0,0,0,.12); transition: transform .60s cubic-bezier(.18,.9,.25,1); will-change: transform; }
+  .tab{padding:10px 16px; border-radius:999px; position:relative; z-index:1; white-space:nowrap; color:var(--ink)}
+  [data-theme="dark"] .indicator{background: rgba(255,255,255,.18); box-shadow: inset 0 0 0 1px rgba(255,255,255,.26), 0 6px 18px rgba(0,0,0,.35)}
+  .seg{ position:relative; display:inline-flex; gap:0; height:36px; padding:2px; border:1px solid var(--border); border-radius:999px; background: var(--glass); }
+  .seg-thumb{ position:absolute; top:2px; left:2px; height:32px; width:32px; border-radius:999px; background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.6)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.65), 0 6px 18px rgba(0,0,0,.12); transition: transform .60s cubic-bezier(.18,.9,.25,1); will-change: transform; }
+  .seg button{ position:relative; z-index:1; height:32px; min-width:32px; padding:0 12px; display:inline-flex; align-items:center; justify-content:center; border:0; border-radius:999px; background:transparent; color:var(--ink); cursor:pointer }
+  [data-theme="dark"] .seg-thumb{ background: rgba(255,255,255,.18); box-shadow: inset 0 0 0 1px rgba(255,255,255,.26), 0 6px 18px rgba(0,0,0,.35) }
+  .btn{border:1px solid var(--border); border-radius:16px; padding:12px 16px; background: var(--glass-b); cursor:pointer}
+  .row{display:flex; gap:12px; align-items:center; justify-content:center}
+  :root{ --hit:44px }
+  @media (max-width: 1024px){
+    .nav .nav-wrap{ padding: max(10px, env(safe-area-inset-top)) 12px 10px 12px; }
+    .tabs{ overflow:auto; -webkit-overflow-scrolling: touch; }
+    .tab{ padding:10px 14px; }
+    .card{ padding:20px; }
+    main{ padding:16px }
+    button{ min-height: var(--hit); }
+  }
+  @media (max-width: 640px){
+    h1{ font-size: clamp(22px, 6vw, 28px) }
+    .flash{ margin:32px auto; padding:28px 18px }
+    .word{ font-size: clamp(32px, 10vw, 44px) }
+    .row{ gap:8px }
+    .row button{ padding:10px 12px; }
+  }
+  @media (hover: none){
+    button:hover{ transform:none; box-shadow:none; }
+  }
+  @supports(padding: max(0px)){
+    body{ padding-bottom: max(0px, env(safe-area-inset-bottom)); }
+  }
+  </style>
+</head>
+
+<body>
+<div class="nav">
+  <div class="nav-wrap">
+    <div class="brand">GRE 词汇训练器</div>
+    <div class="tabs" id="tabs">
+      <div class="indicator" id="tabIndicator"></div>
+      <a class="tab" href="./index.html">主页</a>
+      <a class="tab" href="./study.html">学习</a>
+      <a class="tab" href="./library.html">词库</a>
+      <a class="tab" href="./settings.html">设置</a>
+    </div>
+    <div style="flex:1"></div>
+    <div class="seg" id="themeSeg">
+      <span class="seg-thumb" id="segThumb"></span>
+      <button data-v="auto">A</button><button data-v="light">☀</button><button data-v="dark">☾</button>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="flash" style="text-align:center">
+    <div id="word" class="word" style="font-weight:800; font-size:60px; letter-spacing:.5px; margin: 10px 0">—</div>
+    <div class="row" style="justify-content:center; gap:8px; margin:6px 0">
+      <button class="btn" id="speakUK">🇬🇧</button>
+      <button class="btn" id="speakUS">🇺🇸</button>
+    </div>
+    <div id="def" style="font-size:22px; color:var(--muted); margin:6px 0 16px">请先在“词库”导入 CSV</div>
+    <div class="row">
+      <button class="btn" id="easy">易 (1)</button>
+      <button class="btn" id="hard">难 (2)</button>
+      <button class="btn" id="again">忘 (3)</button>
+    </div>
+  </div>
+</main>
+<script>
+(function(){
+  const seg=document.getElementById('themeSeg'); const thumb=document.getElementById('segThumb');
+  function res(v){ if(v==='auto'){ return (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light'; } return v; }
+  function placeThumb(btn, animate=true){
+    if(!thumb||!btn) return;
+    const x = btn.offsetLeft;
+    const w = btn.offsetWidth;
+    thumb.style.width = w+'px';
+    thumb.style.transform = 'translate3d('+x+'px,0,0)';
+  }
+  function apply(v){
+    const r=res(v); document.documentElement.setAttribute('data-theme', r); localStorage.setItem('gre_theme', v);
+    const btn=[...seg.querySelectorAll('button[data-v]')].find(b=> b.dataset.v===v);
+    [...seg.children].forEach(el=>{ if(el.tagName==='BUTTON') el.classList.toggle('on', el===btn); });
+    placeThumb(btn,true);
+  }
+  const saved=localStorage.getItem('gre_theme')||'auto'; apply(saved);
+  if(window.matchMedia){ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{ if((localStorage.getItem('gre_theme')||'auto')==='auto') apply('auto'); }); }
+  seg.addEventListener('click', e=>{ const b=e.target.closest('button[data-v]'); if(!b) return; apply(b.dataset.v); });
+  window.addEventListener('load', ()=>{ const btn=[...seg.querySelectorAll('button[data-v]')].find(b=> b.classList.contains('on')) || seg.querySelector('button[data-v]'); placeThumb(btn,false); });
+  window.addEventListener('resize', ()=>{ const btn=[...seg.querySelectorAll('button[data-v]')].find(b=> b.classList.contains('on')); placeThumb(btn,false); });
+})();
+(function(){
+  const tabs=document.querySelectorAll('.tab'); const ind=document.getElementById('tabIndicator'); if(!tabs.length||!ind) return;
+  let active=tabs[0]; const cur=(location.pathname.split('/').pop()||'index.html').toLowerCase();
+  tabs.forEach(t=>{ if(t.getAttribute('href').toLowerCase()===cur) active=t; });
+  function place(animate=true){
+    const pr = ind.parentElement.getBoundingClientRect();
+    const ar = active.getBoundingClientRect();
+    const padL = parseFloat(getComputedStyle(ind.parentElement).paddingLeft)||6;
+    const x = Math.round(ar.left - pr.left - padL);
+    const w = Math.round(ar.width);
+    ind.style.transition='none';
+    ind.style.width = w+'px';
+    void ind.offsetWidth;
+    if(animate){ ind.style.transition='transform .60s cubic-bezier(.18,.9,.25,1)'; }
+    ind.style.transform='translate3d('+x+'px,5px,0)';
+    sessionStorage.setItem('gre_tabs_prev_x', String(x));
+  }
+  const prevX = parseFloat(sessionStorage.getItem('gre_tabs_prev_x')||'NaN');
+  if(!Number.isNaN(prevX)){ ind.style.transform='translate3d('+prevX+'px,5px,0)'; requestAnimationFrame(()=> place(true)); }
+  else { place(false); }
+  addEventListener('resize', ()=> place(false));
+})();
+</script>
+<script>
 if('serviceWorker' in navigator){ window.addEventListener('load', ()=>{ navigator.serviceWorker.register('./sw.js'); }); }
+</script>
+
+<script>
+const speak = (text, lang)=>{ try{ const u = new SpeechSynthesisUtterance(text); u.lang=lang; speechSynthesis.speak(u);}catch(e){} }
+document.getElementById('speakUK').onclick=()=> speak(document.getElementById('word').textContent,'en-GB');
+document.getElementById('speakUS').onclick=()=> speak(document.getElementById('word').textContent,'en-US');
+
+const easyBtn = document.getElementById('easy');
+const hardBtn = document.getElementById('hard');
+const againBtn= document.getElementById('again');
+
+function loadQueue(){
+  let q = JSON.parse(localStorage.getItem('gre_queue')||'null');
+  const words = JSON.parse(localStorage.getItem('gre_words')||'[]');
+  if(!words.length){ return {q:null, words:[]} }
+  if(!q || !q.items || !q.items.length){
+    const goal = parseInt(localStorage.getItem('gre_goal')||'30',10);
+    const idx = parseInt(localStorage.getItem('gre_last_index')||'0',10);
+    const batch = words.slice(idx, idx+goal);
+    localStorage.setItem('gre_last_index', String( (idx+goal) % words.length ));
+    q = { items: batch, i:0, done:0 };
+    localStorage.setItem('gre_today_done','0');
+  }
+  return {q, words};
+}
+
+function render(cur){
+  if(!cur){ document.getElementById('word').textContent='—'; document.getElementById('def').textContent='请先在“词库”导入 CSV'; return; }
+  document.getElementById('word').textContent = cur.word;
+  document.getElementById('def').textContent = cur.cn || cur.def || '—';
+}
+
+function saveQueue(q){ localStorage.setItem('gre_queue', JSON.stringify(q)); }
+
+function next(result){
+  const data = loadQueue(); let q = data.q; if(!q) return;
+  if(result==='again'){ q.items.push(q.items[q.i]); }
+  q.i++; q.done++;
+  localStorage.setItem('gre_today_done', String(parseInt(localStorage.getItem('gre_today_done')||'0',10)+1));
+  if(q.i >= q.items.length){
+    render({word:'完成！', cn:'今日目标已完成'});
+  }else{
+    render(q.items[q.i]);
+  }
+  saveQueue(q);
+  console.log(result==='easy'?'已标记：易': result==='hard'?'已标记：难':'已标记：忘');
+}
+
+function init(){
+  const data = loadQueue(); const q = data.q;
+  if(!q){ render(null); return; }
+  render(q.items[q.i]);
+  saveQueue(q);
+}
+easyBtn.onclick = ()=> next('easy');
+hardBtn.onclick = ()=> next('hard');
+againBtn.onclick= ()=> next('again');
+document.addEventListener('keydown', e=>{
+  if(e.key==='1') easyBtn.click();
+  if(e.key==='2') hardBtn.click();
+  if(e.key==='3') againBtn.click();
+});
+init();
 </script>
 </body></html>

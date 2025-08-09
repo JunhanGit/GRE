@@ -64,11 +64,11 @@
   .nav-wrap{display:flex; align-items:center; gap:16px; max-width:1100px; margin: 8px auto; padding: 10px 18px; border-radius: 16px;}
   .brand{font-weight:800; letter-spacing:.3px}
   .tabs{position:relative; display:flex; gap:10px; padding:6px; border:1px solid var(--border); border-radius:999px; background: var(--glass); align-items:center}
-  .indicator{position:absolute; top:6px; left:6px; height:calc(100% - 12px); width:80px; border-radius:999px; background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.6)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.65), 0 6px 18px rgba(0,0,0,.12); transition: transform .60s cubic-bezier(.18,.9,.25,1); will-change: transform; }
+  .indicator{position:absolute; top:50%; left:6px; height:calc(100% - 12px); width:80px; border-radius:999px; background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.6)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.65), 0 6px 18px rgba(0,0,0,.12); transition: transform .60s cubic-bezier(.18,.9,.25,1); will-change: transform; transform: translateY(-50%);}
   .tab{padding:10px 16px; border-radius:999px; position:relative; z-index:1; white-space:nowrap; color:var(--ink)}
   [data-theme="dark"] .indicator{background: rgba(255,255,255,.18); box-shadow: inset 0 0 0 1px rgba(255,255,255,.26), 0 6px 18px rgba(0,0,0,.35)}
   .seg{ position:relative; display:inline-flex; gap:0; height:36px; padding:2px; border:1px solid var(--border); border-radius:999px; background: var(--glass); }
-  .seg-thumb{ position:absolute; top:2px; left:2px; height:32px; width:32px; border-radius:999px; background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.6)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.65), 0 6px 18px rgba(0,0,0,.12); transition: transform .60s cubic-bezier(.18,.9,.25,1); will-change: transform; }
+  .seg-thumb{ position:absolute; top:50%; left:2px; height:32px; width:32px; border-radius:999px; background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.6)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.65), 0 6px 18px rgba(0,0,0,.12); transition: transform .60s cubic-bezier(.18,.9,.25,1); will-change: transform; transform: translateY(-50%);}
   .seg button{ position:relative; z-index:1; height:32px; min-width:32px; padding:0 12px; display:inline-flex; align-items:center; justify-content:center; border:0; border-radius:999px; background:transparent; color:var(--ink); cursor:pointer }
   [data-theme="dark"] .seg-thumb{ background: rgba(255,255,255,.18); box-shadow: inset 0 0 0 1px rgba(255,255,255,.26), 0 6px 18px rgba(0,0,0,.35) }
   .btn{border:1px solid var(--border); border-radius:16px; padding:12px 16px; background: var(--glass-b); cursor:pointer}
@@ -138,7 +138,7 @@
     const x = btn.offsetLeft;
     const w = btn.offsetWidth;
     thumb.style.width = w+'px';
-    thumb.style.transform = 'translate3d('+x+'px,0,0)';
+    thumb.style.transform = 'translate('+x+'px, -50%)';
   }
   function apply(v){
     const r=res(v); document.documentElement.setAttribute('data-theme', r); localStorage.setItem('gre_theme', v);
@@ -162,17 +162,15 @@
     const padL = parseFloat(getComputedStyle(ind.parentElement).paddingLeft)||6;
     const x = Math.round(ar.left - pr.left - padL);
     const w = Math.round(ar.width);
-    ind.style.transition='none';
     ind.style.width = w+'px';
-    void ind.offsetWidth;
-    if(animate){ ind.style.transition='transform .60s cubic-bezier(.18,.9,.25,1)'; }
-    ind.style.transform='translate3d('+x+'px,5px,0)';
+    ind.style.transform='translate('+x+'px, -50%)';
     sessionStorage.setItem('gre_tabs_prev_x', String(x));
   }
   const prevX = parseFloat(sessionStorage.getItem('gre_tabs_prev_x')||'NaN');
-  if(!Number.isNaN(prevX)){ ind.style.transform='translate3d('+prevX+'px,5px,0)'; requestAnimationFrame(()=> place(true)); }
+  if(!Number.isNaN(prevX)){ ind.style.transform='translate('+prevX+'px, -50%)'; requestAnimationFrame(()=> place(true)); }
   else { place(false); }
   addEventListener('resize', ()=> place(false));
+  tabs.forEach(t=> t.addEventListener('click',(e)=>{ const ar=t.getBoundingClientRect(); const pr=ind.parentElement.getBoundingClientRect(); const padL=parseFloat(getComputedStyle(ind.parentElement).paddingLeft)||6; const x=Math.round(ar.left-pr.left-padL); sessionStorage.setItem('gre_tabs_prev_x', String(x)); }));
 })();
 </script>
 <script>

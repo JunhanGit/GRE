@@ -64,11 +64,11 @@
   .nav-wrap{display:flex; align-items:center; gap:16px; max-width:1100px; margin: 8px auto; padding: 10px 18px; border-radius: 16px;}
   .brand{font-weight:800; letter-spacing:.3px}
   .tabs{position:relative; display:flex; gap:10px; padding:6px; border:1px solid var(--border); border-radius:999px; background: var(--glass); align-items:center}
-  .indicator{position:absolute; top:50%; left:6px; height:calc(100% - 12px); width:80px; border-radius:999px; background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.6)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.65), 0 6px 18px rgba(0,0,0,.12); transition: transform .60s cubic-bezier(.18,.9,.25,1); will-change: transform; transform: translateY(-50%);}
+  .indicator{position:absolute; top:50%; transform: translateY(-50%); left:6px; height:calc(100% - 12px); width:80px; border-radius:999px; background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.6)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.65), 0 6px 18px rgba(0,0,0,.12); transition: transform .60s cubic-bezier(.18,.9,.25,1); will-change: transform; }
   .tab{padding:10px 16px; border-radius:999px; position:relative; z-index:1; white-space:nowrap; color:var(--ink)}
   [data-theme="dark"] .indicator{background: rgba(255,255,255,.18); box-shadow: inset 0 0 0 1px rgba(255,255,255,.26), 0 6px 18px rgba(0,0,0,.35)}
   .seg{ position:relative; display:inline-flex; gap:0; height:36px; padding:2px; border:1px solid var(--border); border-radius:999px; background: var(--glass); }
-  .seg-thumb{ position:absolute; top:50%; left:2px; height:32px; width:32px; border-radius:999px; background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.6)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.65), 0 6px 18px rgba(0,0,0,.12); transition: transform .60s cubic-bezier(.18,.9,.25,1); will-change: transform; transform: translateY(-50%);}
+  .seg-thumb{ position:absolute; top:50%; transform: translateY(-50%); left:2px; height:32px; width:32px; border-radius:999px; background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.6)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.65), 0 6px 18px rgba(0,0,0,.12); transition: transform .60s cubic-bezier(.18,.9,.25,1); will-change: transform; }
   .seg button{ position:relative; z-index:1; height:32px; min-width:32px; padding:0 12px; display:inline-flex; align-items:center; justify-content:center; border:0; border-radius:999px; background:transparent; color:var(--ink); cursor:pointer }
   [data-theme="dark"] .seg-thumb{ background: rgba(255,255,255,.18); box-shadow: inset 0 0 0 1px rgba(255,255,255,.26), 0 6px 18px rgba(0,0,0,.35) }
   .btn{border:1px solid var(--border); border-radius:16px; padding:12px 16px; background: var(--glass-b); cursor:pointer}
@@ -127,58 +127,53 @@
     </div>
   </div>
 </main>
+
 <script>
-(function(){
-  const seg=document.getElementById('themeSeg'); const thumb=document.getElementById('segThumb');
-  function res(v){ if(v==='auto'){ return (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light'; } return v; }
-  function placeThumb(btn, animate=true){
-    if(!thumb||!btn) return;
-    const x = btn.offsetLeft;
-    const w = btn.offsetWidth;
-    thumb.style.width = w+'px';
-    thumb.style.transform = 'translate('+x+'px, -50%)';
-  }
-  function apply(v){
-    const r=res(v); document.documentElement.setAttribute('data-theme', r); localStorage.setItem('gre_theme', v);
-    const btn=[...seg.querySelectorAll('button[data-v]')].find(b=> b.dataset.v===v);
-    [...seg.children].forEach(el=>{ if(el.tagName==='BUTTON') el.classList.toggle('on', el===btn); });
-    placeThumb(btn,true);
-  }
+// ---- Theme segmented control (stable) ----
+(function ThemePill(){
+  const seg=document.getElementById('themeSeg'); if(!seg) return;
+  const thumb=document.getElementById('segThumb');
+  function resolve(v){ return v==='auto' ? (matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light') : v; }
+  function activeBtn(v){ return [...seg.querySelectorAll('button[data-v]')].find(b=>b.dataset.v===v); }
+  function placeThumbTo(btn){ if(!thumb||!btn) return; thumb.style.transform='translate('+btn.offsetLeft+'px, -50%)'; thumb.style.width=btn.offsetWidth+'px'; }
+  function apply(v){ const r=resolve(v); document.documentElement.setAttribute('data-theme', r); localStorage.setItem('gre_theme', v); placeThumbTo(activeBtn(v)); }
   const saved=localStorage.getItem('gre_theme')||'auto'; apply(saved);
   if(window.matchMedia){ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{ if((localStorage.getItem('gre_theme')||'auto')==='auto') apply('auto'); }); }
   seg.addEventListener('click', e=>{ const b=e.target.closest('button[data-v]'); if(!b) return; apply(b.dataset.v); });
-  window.addEventListener('load', ()=>{ const btn=[...seg.querySelectorAll('button[data-v]')].find(b=> b.classList.contains('on')) || seg.querySelector('button[data-v]'); placeThumb(btn,false); });
-  window.addEventListener('resize', ()=>{ const btn=[...seg.querySelectorAll('button[data-v]')].find(b=> b.classList.contains('on')); placeThumb(btn,false); });
-})();
-(function(){
-  const tabs=document.querySelectorAll('.tab'); const ind=document.getElementById('tabIndicator'); if(!tabs.length||!ind) return;
-  let active=tabs[0]; const cur=(location.pathname.split('/').pop()||'index.html').toLowerCase();
-  tabs.forEach(t=>{ if(t.getAttribute('href').toLowerCase()===cur) active=t; });
-  function place(animate=true){
-    const pr = ind.parentElement.getBoundingClientRect();
-    const ar = active.getBoundingClientRect();
-    const padL = parseFloat(getComputedStyle(ind.parentElement).paddingLeft)||6;
-    const x = Math.round(ar.left - pr.left - padL);
-    const w = Math.round(ar.width);
-    ind.style.width = w+'px';
-    ind.style.transform='translate('+x+'px, -50%)';
-    sessionStorage.setItem('gre_tabs_prev_x', String(x));
-  }
-  const prevX = parseFloat(sessionStorage.getItem('gre_tabs_prev_x')||'NaN');
-  if(!Number.isNaN(prevX)){ ind.style.transform='translate('+prevX+'px, -50%)'; requestAnimationFrame(()=> place(true)); }
-  else { place(false); }
-  addEventListener('resize', ()=> place(false));
-  tabs.forEach(t=> t.addEventListener('click',(e)=>{ const ar=t.getBoundingClientRect(); const pr=ind.parentElement.getBoundingClientRect(); const padL=parseFloat(getComputedStyle(ind.parentElement).paddingLeft)||6; const x=Math.round(ar.left-pr.left-padL); sessionStorage.setItem('gre_tabs_prev_x', String(x)); }));
+  addEventListener('resize', ()=> placeThumbTo(activeBtn(localStorage.getItem('gre_theme')||'auto')));
 })();
 </script>
 <script>
-if('serviceWorker' in navigator){ window.addEventListener('load', ()=>{ navigator.serviceWorker.register('./sw.js'); }); }
+// ---- Top tabs silky indicator (isolated) ----
+(function TabsIndicator(){
+  const tabsWrap=document.getElementById('tabs'); if(!tabsWrap) return;
+  const ind=document.getElementById('tabIndicator');
+  const tabs=[...tabsWrap.querySelectorAll('.tab')];
+  function currentTab(){ const cur=(location.pathname.split('/').pop()||'index.html').toLowerCase(); return tabs.find(t=>t.getAttribute('href').toLowerCase()===cur) || tabs[0]; }
+  function xyFor(el){
+    const pr=tabsWrap.getBoundingClientRect();
+    const er=el.getBoundingClientRect();
+    const padL=parseFloat(getComputedStyle(tabsWrap).paddingLeft)||6;
+    return { x: Math.round(er.left-pr.left-padL), w: Math.round(er.width) };
+  }
+  function setPos(x,w,animate){
+    ind.style.width=w+'px';
+    if(animate){ ind.style.transition='transform .60s cubic-bezier(.18,.9,.25,1)'; }
+    else{ ind.style.transition='none'; }
+    ind.style.transform='translate('+x+'px, -50%)';
+  }
+  // initial: from prevX -> curX
+  const cur=currentTab(); const curXY=xyFor(cur);
+  const prevX = parseFloat(sessionStorage.getItem('gre_tabs_prev_x')||'NaN');
+  if(!Number.isNaN(prevX)){ setPos(prevX, curXY.w, false); requestAnimationFrame(()=> setPos(curXY.x, curXY.w, true)); }
+  else{ setPos(curXY.x, curXY.w, false); }
+  // before navigate: store x of clicked tab (for next page to animate from)
+  tabs.forEach(t=> t.addEventListener('click', ()=>{ const p=xyFor(t); sessionStorage.setItem('gre_tabs_prev_x', String(p.x)); }));
+  addEventListener('resize', ()=>{ const xy=xyFor(currentTab()); setPos(xy.x, xy.w, false); });
+})();
+</script>
+<script>
+if('serviceWorker' in navigator){ addEventListener('load', ()=>{ navigator.serviceWorker.register('./sw.js'); }); }
 </script>
 
-<script>
-const goal = document.getElementById('goal');
-goal.value = localStorage.getItem('gre_goal')||'30';
-goal.addEventListener('change', ()=> localStorage.setItem('gre_goal', goal.value));
-document.getElementById('clear').onclick = ()=>{ localStorage.removeItem('gre_queue'); localStorage.setItem('gre_today_done','0'); alert('已重置今日队列'); };
-</script>
 </body></html>

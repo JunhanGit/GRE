@@ -134,51 +134,72 @@
 </main>
 
 <script>
-// ---- Theme segmented control (stable) ----
-(function ThemePill(){
+// ===== Theme pill (isolated) =====
+(function GRE_ThemePill(){
   const seg=document.getElementById('themeSeg'); if(!seg) return;
   const thumb=document.getElementById('segThumb');
   function resolve(v){ return v==='auto' ? (matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light') : v; }
-  function activeBtn(v){ return [...seg.querySelectorAll('button[data-v]')].find(b=>b.dataset.v===v); }
-  function placeThumbTo(btn){ if(!thumb||!btn) return; thumb.style.transform='translate('+btn.offsetLeft+'px, -50%)'; thumb.style.width=btn.offsetWidth+'px'; }
-  function apply(v){ const r=resolve(v); document.documentElement.setAttribute('data-theme', r); localStorage.setItem('gre_theme', v); placeThumbTo(activeBtn(v)); }
-  const saved=localStorage.getItem('gre_theme')||'auto'; apply(saved);
-  if(window.matchMedia){ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{ if((localStorage.getItem('gre_theme')||'auto')==='auto') apply('auto'); }); }
-  seg.addEventListener('click', e=>{ const b=e.target.closest('button[data-v]'); if(!b) return; apply(b.dataset.v); });
-  addEventListener('resize', ()=> placeThumbTo(activeBtn(localStorage.getItem('gre_theme')||'auto')));
+  function btnOf(v){ return [...seg.querySelectorAll('button[data-v]')].find(b=>b.dataset.v===v); }
+  function place(btn, animate){
+    thumb.style.width = btn.offsetWidth + 'px';
+    const x = btn.offsetLeft;
+    if(!animate){ thumb.style.transition='none'; } else { thumb.style.transition='transform .60s cubic-bezier(.18,.9,.25,1)'; }
+    thumb.style.transform = 'translate('+x+'px, -50%)';
+  }
+  function apply(v, animate){
+    const r=resolve(v);
+    document.documentElement.setAttribute('data-theme', r);
+    localStorage.setItem('gre_theme', v);
+    const b = btnOf(v) || seg.querySelector('button[data-v]');
+    place(b, animate);
+  }
+  const saved = localStorage.getItem('gre_theme') || 'auto';
+  apply(saved, false);
+  if(window.matchMedia){
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{
+      if((localStorage.getItem('gre_theme')||'auto')==='auto') apply('auto', true);
+    });
+  }
+  seg.addEventListener('click', e=>{
+    const b=e.target.closest('button[data-v]'); if(!b) return;
+    apply(b.dataset.v, true);
+  });
+  addEventListener('resize', ()=>{ const v=localStorage.getItem('gre_theme')||'auto'; const b=btnOf(v)||seg.querySelector('button[data-v]'); place(b,false); });
 })();
 </script>
 <script>
-// ---- Top tabs silky indicator (isolated) ----
-(function TabsIndicator(){
-  const tabsWrap=document.getElementById('tabs'); if(!tabsWrap) return;
+// ===== Tabs indicator (isolated) =====
+(function GRE_TabsIndicator(){
+  const wrap=document.getElementById('tabs'); if(!wrap) return;
   const ind=document.getElementById('tabIndicator');
-  const tabs=[...tabsWrap.querySelectorAll('.tab')];
-  function currentTab(){ const cur=(location.pathname.split('/').pop()||'index.html').toLowerCase(); return tabs.find(t=>t.getAttribute('href').toLowerCase()===cur) || tabs[0]; }
-  function xyFor(el){
-    const pr=tabsWrap.getBoundingClientRect();
-    const er=el.getBoundingClientRect();
-    const padL=parseFloat(getComputedStyle(tabsWrap).paddingLeft)||6;
-    return { x: Math.round(er.left-pr.left-padL), w: Math.round(er.width) };
+  const tabs=[...wrap.querySelectorAll('.tab')];
+  function curTab(){
+    const cur=(location.pathname.split('/').pop()||'index.html').toLowerCase();
+    return tabs.find(t=>t.getAttribute('href').toLowerCase()===cur) || tabs[0];
+  }
+  function xy(el){
+    const pr=wrap.getBoundingClientRect(); const er=el.getBoundingClientRect();
+    const padL=parseFloat(getComputedStyle(wrap).paddingLeft)||6;
+    return {x: Math.round(er.left-pr.left-padL), w: Math.round(er.width)};
   }
   function setPos(x,w,animate){
     ind.style.width=w+'px';
-    if(animate){ ind.style.transition='transform .60s cubic-bezier(.18,.9,.25,1)'; }
-    else{ ind.style.transition='none'; }
+    if(!animate){ ind.style.transition='none'; } else { ind.style.transition='transform .60s cubic-bezier(.18,.9,.25,1)'; }
     ind.style.transform='translate('+x+'px, -50%)';
   }
-  // initial: from prevX -> curX
-  const cur=currentTab(); const curXY=xyFor(cur);
+  const cur=curTab(); const curXY=xy(cur);
   const prevX = parseFloat(sessionStorage.getItem('gre_tabs_prev_x')||'NaN');
   if(!Number.isNaN(prevX)){ setPos(prevX, curXY.w, false); requestAnimationFrame(()=> setPos(curXY.x, curXY.w, true)); }
-  else{ setPos(curXY.x, curXY.w, false); }
-  // before navigate: store x of clicked tab (for next page to animate from)
-  tabs.forEach(t=> t.addEventListener('click', ()=>{ const p=xyFor(t); sessionStorage.setItem('gre_tabs_prev_x', String(p.x)); }));
-  addEventListener('resize', ()=>{ const xy=xyFor(currentTab()); setPos(xy.x, xy.w, false); });
+  else { setPos(curXY.x, curXY.w, false); }
+  tabs.forEach(t=> t.addEventListener('click', ()=>{ const p=xy(t); sessionStorage.setItem('gre_tabs_prev_x', String(p.x)); }));
+  addEventListener('resize', ()=>{ const a=curTab(); const p=xy(a); setPos(p.x, p.w, false); });
 })();
 </script>
 <script>
-if('serviceWorker' in navigator){ addEventListener('load', ()=>{ navigator.serviceWorker.register('./sw.js?v=4223'); }); }
+// ===== PWA register (with version bust) =====
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{ navigator.serviceWorker.register('./sw.js?v=4224'); });
+}
 </script>
 
 </body></html>

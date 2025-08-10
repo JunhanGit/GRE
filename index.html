@@ -118,6 +118,7 @@
 </div>
 
 <main>
+<div class="card" style="margin-bottom:8px;background:rgba(255,230,150,.6);color:#553;"><b>Debug build (no Service Worker)</b> · v4.22.7 · ts=1754844031</div>
   <div class="card">
     <h1>跨平台 · 高级玻璃 · 即开即用</h1>
     <h2>在 Windows / macOS / iPhone（添加到主屏幕）上都能用。先去 “词库” 导入 CSV，再开始学习。</h2>
@@ -205,10 +206,7 @@
 </script>
 <script>
 // ===== PWA register (with version bust) =====
-if('serviceWorker' in navigator){
-  window.addEventListener('load', ()=>{ navigator.serviceWorker.register('./sw4226.js?t=4226'); });
-}
-</script>
+<script>console.log('[GRE] noSW debug build loaded');</script>
 
 
 <script>
